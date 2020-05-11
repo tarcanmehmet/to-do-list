@@ -1,6 +1,6 @@
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
-It is a basic <em>to-do</em> list for creating simple, fast list.
+It is a basic <em>to-do</em> list for creating simple and fast list.
 
 You can check it at https://bit.ly/2SVadQO and please feel free to give feedback to me...
 
