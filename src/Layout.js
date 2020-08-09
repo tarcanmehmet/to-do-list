@@ -1,77 +1,135 @@
 import React from "react";
 import InputArea from "./components/InputArea";
 import ListArea from "./components/ListArea";
+import Loader from "./components/Loader/Loader";
+import axios from "axios";
 export default class Layout extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      listItems: [{ value: "", status: false }],
+      listItems: [],
       emptyInput: "",
+      shouldUpdateList: false,
+      loading: true,
     };
-    this.handleInputOnChange = this.handleInputOnChange.bind(this);
-    this.handleInputEnter = this.handleInputEnter.bind(this);
   }
-  handleInputEnter(event) {
+  handleInputEnter = (event) => {
     if (event.key === "Enter" && event.target.value !== "") {
-      const listItems = [...this.state.listItems];
-      listItems.push({ value: event.target.value, status: false });
       this.setState({
-        listItems,
-        emptyInput: "",
+        loading: true,
       });
+      let listedItem = { value: event.target.value, status: false };
+      axios
+        .post("/lists.json", listedItem)
+        .then((response) =>
+          this.setState({
+            emptyInput: "",
+            shouldUpdateList: true,
+            loading: false,
+          })
+        )
+        .catch((err) => console.log(err));
     }
     return null;
-  }
-  handleInputOnChange(event) {
+  };
+  handleInputOnChange = (event) => {
     this.setState({
       emptyInput: event.target.value,
     });
-  }
+  };
 
   handleInputCheckBox(index) {
-    const listItems = [...this.state.listItems];
-    listItems[index].status = !listItems[index].status;
     this.setState({
-      listItems,
+      loading: true,
     });
+    axios
+      .put(
+        `/lists/${this.state.listItems[index].fireBaseKey}/status.json`,
+        !this.state.listItems[index].data.status
+      )
+      .then((response) => {
+        this.setState({
+          shouldUpdateList: true,
+          loading: false,
+        });
+      })
+      .catch((err) => console.log(err));
   }
 
   handleRemoveList(index) {
-    const listItems = [...this.state.listItems];
-    listItems.splice(index, 1);
     this.setState({
-      listItems,
+      loading: true,
     });
+    axios
+      .delete(
+        `/lists/${this.state.listItems[index].fireBaseKey}.json`,
+        !this.state.listItems[index].data.status
+      )
+      .then((response) => {
+        this.setState({ shouldUpdateList: true, loading: false });
+      })
+      .catch((err) => console.log(err));
   }
   componentDidMount() {
-    if (
-      this.state.listItems.length === 1 &&
-      this.state.listItems[0].value === ""
-    ) {
-      const listItems = [...this.state.listItems];
-      listItems.splice(0, 1);
-      this.setState({
-        listItems,
-      });
+    this.getListFromServer();
+  }
+
+  componentDidUpdate() {
+    if (this.state.shouldUpdateList) {
+      this.getListFromServer();
     }
   }
-  render() {
-    let list = (
-      <ul>
-        {this.state.listItems.map((item, index) => {
-          return (
-            <ListArea
-              key={index}
-              value={item.value}
-              checked={item.status}
-              onChange={() => this.handleInputCheckBox(index)}
-              onRemove={() => this.handleRemoveList(index)}
-            />
-          );
-        })}
-      </ul>
-    );
 
+  getListFromServer() {
+    axios
+      .get("/lists.json")
+      .then((response) => {
+        const listItems = [];
+        for (var fireBaseKey in response.data) {
+          listItems.push({
+            fireBaseKey,
+            data: response.data[fireBaseKey],
+          });
+        }
+        this.setState({
+          listItems: listItems,
+          shouldUpdateList: false,
+          loading: false,
+        });
+      })
+      .catch((err) => console.log(err));
+  }
+  render() {
+    let list;
+
+    if (this.state.listItems.length) {
+      list = (
+        <ul>
+          {this.state.listItems.map((item, index) => {
+            return (
+              <ListArea
+                key={index}
+                value={item.data.value}
+                checked={item.data.status}
+                onChange={() => this.handleInputCheckBox(index)}
+                onRemove={() => this.handleRemoveList(index)}
+              ></ListArea>
+            );
+          })}
+        </ul>
+      );
+    }
+    this.state.listItems.map((item, index) => {
+      return (
+        <ListArea
+          key={index}
+          value={item.data.value}
+          checked={item.data.status}
+          onChange={() => this.handleInputCheckBox(index)}
+          onRemove={() => this.handleRemoveList(index)}
+        ></ListArea>
+      );
+    });
     return (
       <React.Fragment>
         <InputArea
@@ -79,7 +137,7 @@ export default class Layout extends React.Component {
           onEnter={this.handleInputEnter}
           onChange={this.handleInputOnChange}
         />
-        {list}
+        {this.state.loading ? <Loader /> : list}
       </React.Fragment>
     );
   }

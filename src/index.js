@@ -4,7 +4,8 @@ import "./normalize.css";
 import "./skeleton.css";
 import App from "./App";
 import * as serviceWorker from "./serviceWorker";
-
+import axios from "axios";
+axios.defaults.baseURL = "https://to-do-list-5ffc3.firebaseio.com";
 ReactDOM.render(
   <React.StrictMode>
     <App />
