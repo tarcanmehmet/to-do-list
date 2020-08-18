@@ -1,7 +1,16 @@
 .container {
   margin-top: 15vh;
 }
-
+header.container {
+  margin-top: 1rem;
+}
+header nav ul {
+  display: flex;
+  justify-content: flex-end;
+}
+nav ul li {
+  margin-right: 5rem;
+}
 .passive {
   color: #d1d1d1;
 }
@@ -24,4 +33,18 @@ li {
 
 .pointer {
   cursor: pointer;
+}
+
+a {
+  color: #222;
+}
+a:hover,
+a.active {
+  color: #fc7753;
+}
+
+button:hover,
+button:focus {
+  color: #fff;
+  border-color: #fc7753;
 }
